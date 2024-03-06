@@ -1,3 +1,6 @@
+// Some constants for configuring
+const NUMBER_OF_BOIDS = 100;
+
 // A placeholder variable where we will store our canvas HTML element.
 let canvas;
 
@@ -30,20 +33,22 @@ function setup() {
     // Get the rendering context from the canvas element
     context = canvas.getContext("2d");
 
-    for (let i = 0; i < 50; i++) {
-        // This loop runs 50 times.
-        // i will go from 0 - 49.
+    for (let i = 0; i < NUMBER_OF_BOIDS; i++) {
+        // This loop runs NUMBER_OF_BOIDS times.
+        // i will go from 0 - (NUMBER_OF_BOIDS - 1).
 
-        const boid = new Boid();    // Create a new boid (and call it's constructor under the hood)
-        boids.push(boid);           // "push" the new boid into the array of boids
+        // Create a new boid (and call it's constructor under the hood)
+        // see "boid.js" to see the definition of this class.
+        const boid = new Boid();
+
+        // "push" the new boid into the array of boids
+        boids.push(boid);
     }
 }
 
 // This function will run over and over until the simulation
 // is stopped.
 function loop() {
-    // For debug purposes
-    console.log("Running loop()");
 
     // Set background color
     context.fillStyle = `#222222`;
@@ -57,6 +62,17 @@ function loop() {
     // Draw our boids
     for (const boid of boids) {
         // Code in here will run for EACH boid
+
+        for(const otherBoid of boids){
+            if(boid === otherBoid){
+                // If both loop boids are the same object
+                // skip it and continue.
+                continue;
+            }
+
+            // Run the flock method against every OTHER boid
+            boid.flock(otherBoid);
+        }
 
         boid.update();
 

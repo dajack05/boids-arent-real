@@ -7,14 +7,47 @@ class Boid {
     // is created. This is handled by JS, so we don't need
     // to call this function.
     constructor() {
-        this.angle = Math.random() * 360;               // Random starting angle
+        this.angle = Math.random() * Math.PI * 2;       // Random starting angle (in radians)
         this.x = Math.random() * window.innerWidth;     // Random starting position X
         this.y = Math.random() * window.innerHeight;    // Random starting position Y
+    }
+
+    // This function returns the distance from our
+    // location, to the specified X,Y position.
+    distanceTo(x, y) {
+        return Math.hypot(this.x - x, this.y - y);
+    }
+
+    // This function aligns THIS boid with the
+    // boid passed in via the "boid" parameter
+    // proportinally to the distance between them.
+    flock(boid) {
+        const distance = this.distanceTo(boid.x, boid.y);
+        const maxDistance = 300;
+
+        // If we're too far away, just ignore it
+        if (distance > maxDistance) {
+            return;
+        }
+
+        // 0.0 - 1.0. How close is it?
+        const influence = 1.0 - distance / maxDistance;
+
+        // How far away are we from the desired angle?
+        const angularDifference = boid.angle - this.angle;
+
+        // How much do we want to change the angle
+        // bearing in mind the distance?
+        const angularChange = angularDifference * influence;
+
+        // Make it so number 1
+        this.angle += angularChange;
     }
 
     // A function whose ONLY job is to update the
     // state of THIS boid.
     update() {
+        // Move according to angle
         this.x += Math.sin(this.angle);
         this.y -= Math.cos(this.angle);
 
