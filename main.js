@@ -1,5 +1,8 @@
 // Some constants for configuring
-const NUMBER_OF_BOIDS = 100;
+const NUMBER_OF_BOIDS = 20;
+const VISION_DISTANCE = 100;
+const IDEAL_SEPERATION = 100;
+const TURN_SPEED = 0.01;
 
 // A placeholder variable where we will store our canvas HTML element.
 let canvas;
@@ -70,11 +73,11 @@ function loop() {
                 continue;
             }
 
-            // Run the flock method against every OTHER boid
-            boid.flock(otherBoid);
+            boid.align(otherBoid, VISION_DISTANCE);
+            // boid.seperate(otherBoid, IDEAL_SEPERATION);
         }
 
-        boid.update();
+        boid.update(TURN_SPEED);
 
         boid.draw(context);
     }
