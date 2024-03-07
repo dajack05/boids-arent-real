@@ -1,6 +1,6 @@
 // Some constants for configuring
-const NUMBER_OF_BOIDS = 100;
-const VISION_DISTANCE = 75;
+const NUMBER_OF_BOIDS = 10;
+const VISION_DISTANCE = 100;
 const IDEAL_SEPERATION = 25;
 const TURN_SPEED = 0.05;
 
@@ -17,6 +17,11 @@ let counter = 0;
 
 // An array to hold all of our boids
 let boids = [];
+
+// The X component of the LAST FRAME average flock position
+let flockCenterX;
+// The Y component of the LAST FRAME average flock position
+let flockCenterY;
 
 // This function will be called once to get everything ready.
 function setup() {
@@ -44,6 +49,27 @@ function setup() {
         // see "boid.js" to see the definition of this class.
         const boid = new Boid();
 
+        // Update the flock center as we create the boids
+        // If flockCenterX is not set yet
+        if (flockCenterX == null) {
+            // Set it to this boid's position
+            flockCenterX = boid.x;
+        } else {
+            // If it IS set
+            // Average it's prior value with this boid's position
+            flockCenterX = (flockCenterX + boid.x) / 2;
+        }
+
+        // If flockCenterY is not set yet
+        if (flockCenterY == null) {
+            // Set it to this boid's position
+            flockCenterY = boid.y;
+        } else {
+            // If it IS set
+            // Average it's prior value with this boid's position
+            flockCenterY = (flockCenterY + boid.y) / 2;
+        }
+
         // "push" the new boid into the array of boids
         boids.push(boid);
     }
@@ -51,8 +77,8 @@ function setup() {
     // This allows us to fire the loop function by
     // pressing the "a" key. This allows for single
     // step loops.
-    document.addEventListener('keydown', (evt)=>{
-        if(evt.key == "a"){
+    document.addEventListener('keydown', (evt) => {
+        if (evt.key == "a") {
             loop();
         }
     })
@@ -71,26 +97,47 @@ function loop() {
     // Increment counter by one
     counter = counter + 1;
 
+    // A variable to store the average location of our
+    //  flock X position. Initialized with the first
+    //  boid's location to not bias the result.
+    let workingAverageFlockX = boids[0].x;
+
+    // A variable to store the average location of our
+    //  flock Y position. Initialized with the first
+    //  boid's location to not bias the result.
+    let workingAverageFlockY = boids[0].y;
+
     // Draw our boids
     for (const boid of boids) {
         // Code in here will run for EACH boid
 
-        for (const otherBoid of boids) {
-            if (boid === otherBoid) {
-                // If both loop boids are the same object
-                // skip it and continue.
-                continue;
-            }
-
-            // boid.align(otherBoid, VISION_DISTANCE);
-            // boid.seperate(otherBoid, IDEAL_SEPERATION);
-            boid.
-        }
+        boid.align(boids, VISION_DISTANCE, 1.0);
+        // boid.flock(flockCenterX, flockCenterY, 1.0);
+        // boid.seperate(boids, IDEAL_SEPERATION, 1.0);
 
         boid.update(TURN_SPEED);
 
         boid.draw(context);
+
+        // Update averages
+        workingAverageFlockX = (workingAverageFlockX + boid.x) / 2;
+        workingAverageFlockY = (workingAverageFlockY + boid.y) / 2;
     }
+
+    // If we were to update the flock average position in
+    //  a rolling manor (updating the average with each boid)
+    //  each boid would have a different answer.
+    // The last few boids would be close to the right answer,
+    //  but the first one would consider itself to be the
+    //  center of the flock.
+    // Instead, we average the answer throughout the frame
+    //  and update a global variable (flockCenter) and use
+    //  that value for ALL boids.
+    // This does mean our flock center is always 1 frame
+    //  off. But it also means that all boids have an equally
+    //  correct value being sent to them.
+    flockCenterX = workingAverageFlockX;
+    flockCenterY = workingAverageFlockY;
 
     // Request the next frame to call loop() starting a never-ending
     // loop.

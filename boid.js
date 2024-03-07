@@ -1,5 +1,5 @@
 // Utility function to limit radians between -PI and +PI
-function toSafeAngle(input){
+function toSafeAngle(input) {
     let a = input;
     while (a > Math.PI) {
         a -= Math.PI * 2;
@@ -8,6 +8,11 @@ function toSafeAngle(input){
         a += Math.PI * 2;
     }
     return a;
+}
+
+// Utility linear interpolation function
+function lerp(start, end, percent) {
+    return start + percent * (end - start);
 }
 
 class Boid {
@@ -39,31 +44,50 @@ class Boid {
     }
 
     // This function aligns THIS boid with the
-    // boid passed in via the "boid" parameter
+    // boids passed in via the "boids" parameter
     // proportinally to the distance between them.
     // maxDistance is how far the boid can "see".
-    align(boid, maxDistance) {
-        const distance = this.distanceTo(boid.x, boid.y);
+    align(boids, maxDistance, strength) {
+        let averageAlignedAngle = null;
 
-        // If we're too far away, just ignore it
-        if (distance > maxDistance) {
-            return;
+        for (const boid of boids) {
+            // Ignore the boid if it is us.
+            if(boid == this){
+                continue;
+            }
+
+            const distance = this.distanceTo(boid.x, boid.y);
+
+            // If we're too far away, just ignore it
+            if (distance > maxDistance) {
+                return;
+            }
+
+            // 0.0 - 1.0. How close is it?
+            const influence = 1.0 - distance / maxDistance;
+
+            // What is the angle given it's distance?
+            const distanceFactoredAngle = boid.angle * influence;
+
+            // If averageAlignedAngle hasn't been set yet
+            if(averageAlignedAngle == null){
+                // Set it
+                averageAlignedAngle = distanceFactoredAngle;
+            }else{
+                // Otherwise, average it
+                averageAlignedAngle = (averageAlignedAngle + distanceFactoredAngle) / 2;
+            }
         }
 
-        // 0.0 - 1.0. How close is it?
-        const influence = 1.0 - distance / maxDistance;
-
-        // What is the angle given it's distance?
-        const distanceFactoredAngle = boid.angle * influence;
-
-        // Adjust the target angle accordingly
-        this.targetAngle = (this.targetAngle + distanceFactoredAngle) / 2.0;
+        console.log(averageAlignedAngle);
+        // Average our "ideal" angle, and the existing angle
+        this.targetAngle = averageAlignedAngle;//lerp(this.targetAngle, averageAlignedAngle, strength);
     }
 
     // This function tries to keep a set distance
     // between THIS boid and the incoming parameter
     // boid.
-    seperate(boid, goalDistance) {
+    seperate(boid, goalDistance, strength) {
         const distance = this.distanceTo(boid.x, boid.y);
 
         const influence = distance / goalDistance;
@@ -75,18 +99,18 @@ class Boid {
         }
 
         const angle = this.angleTo(boid.x, boid.y);
-        this.targetAngle = angle;
+
+        // Average our "ideal" angle, and the existing angle
+        this.targetAngle = lerp(this.targetAngle, angle, strength);
     }
 
     // This function tries to turn into the center of the "flock"
-    flock(averageCenterX, averageCenterY){
-        const distance = this.distanceTo(averageCenterX, averageCenterY);
+    flock(averageCenterX, averageCenterY, strength) {
+        // From where we are, where is the flock?
+        const angleToFlock = toSafeAngle(this.angleTo(averageCenterX, averageCenterY) + Math.PI);
 
-        const angleToFlock = this.angleTo(averageCenterX, averageCenterY);
-
-        const 
-
-        const influence = 
+        // Average our "ideal" angle, and the existing angle
+        this.targetAngle = lerp(this.targetAngle, angleToFlock, strength);
     }
 
     // A function whose ONLY job is to update the
