@@ -1,3 +1,15 @@
+// Utility function to limit radians between -PI and +PI
+function toSafeAngle(input){
+    let a = input;
+    while (a > Math.PI) {
+        a -= Math.PI * 2;
+    }
+    while (a < -Math.PI) {
+        a += Math.PI * 2;
+    }
+    return a;
+}
+
 class Boid {
     x = 0;              // Where we are on the X axis
     y = 0;              // Where we are on the Y axis
@@ -17,10 +29,7 @@ class Boid {
     // This function returns the angle (in radians)
     // from our location to the specified X,Y position.
     angleTo(x, y) {
-        const dx = this.x - x;
-        const dy = this.y - y;
-        const angle = Math.atan2(dy, dx);
-        return angle;
+        return Math.atan2(y - this.y, x - this.x) - (Math.PI / 2);
     }
 
     // This function returns the distance from our
@@ -57,40 +66,39 @@ class Boid {
     seperate(boid, goalDistance) {
         const distance = this.distanceTo(boid.x, boid.y);
 
-        // = 1.0 : at goal distance
-        // > 1.0 : too close
-        // < 1.0 : too far
         const influence = distance / goalDistance;
 
         // Influence will be over 1.0 if we're not
         // too close. So ignore those cases.
-        if(influence > 1.0){
+        if (influence > 1.0) {
             return;
         }
 
-        // The angle from our X,Y to the boid X,Y in radians.
-        const angleToBoid = this.angleTo(boid.x, boid.y);
+        const angle = this.angleTo(boid.x, boid.y);
+        this.targetAngle = angle;
+    }
 
-        // The opposite angle to get the FROM boid angle
-        const angleFromBoid = angleToBoid + Math.PI;
+    // This function tries to turn into the center of the "flock"
+    flock(averageCenterX, averageCenterY){
+        const distance = this.distanceTo(averageCenterX, averageCenterY);
 
-        // How far away are we from the desired angle?
-        const angularDifference = angleFromBoid - this.angle;
+        const angleToFlock = this.angleTo(averageCenterX, averageCenterY);
 
-        // How much do we want to change the angle
-        // bearing in mind the distance?
-        const angularChange = angularDifference * (1.0 - influence);
+        const 
 
-        this.angle -= angularChange;
+        const influence = 
     }
 
     // A function whose ONLY job is to update the
     // state of THIS boid.
     update(turnSpeedMultiplier) {
         // How far off are we?
-        const angleDifference = this.targetAngle - this.angle;
-        
-        // Slowly move toward it
+        let angleDifference = this.targetAngle - this.angle;
+
+        // Limit the angle
+        angleDifference = toSafeAngle(angleDifference);
+
+        // Slowly rotate toward the target angle
         this.angle += angleDifference * turnSpeedMultiplier;
 
         // Move according to angle

@@ -1,8 +1,8 @@
 // Some constants for configuring
-const NUMBER_OF_BOIDS = 20;
-const VISION_DISTANCE = 100;
-const IDEAL_SEPERATION = 100;
-const TURN_SPEED = 0.01;
+const NUMBER_OF_BOIDS = 100;
+const VISION_DISTANCE = 75;
+const IDEAL_SEPERATION = 25;
+const TURN_SPEED = 0.05;
 
 // A placeholder variable where we will store our canvas HTML element.
 let canvas;
@@ -47,6 +47,15 @@ function setup() {
         // "push" the new boid into the array of boids
         boids.push(boid);
     }
+
+    // This allows us to fire the loop function by
+    // pressing the "a" key. This allows for single
+    // step loops.
+    document.addEventListener('keydown', (evt)=>{
+        if(evt.key == "a"){
+            loop();
+        }
+    })
 }
 
 // This function will run over and over until the simulation
@@ -66,15 +75,16 @@ function loop() {
     for (const boid of boids) {
         // Code in here will run for EACH boid
 
-        for(const otherBoid of boids){
-            if(boid === otherBoid){
+        for (const otherBoid of boids) {
+            if (boid === otherBoid) {
                 // If both loop boids are the same object
                 // skip it and continue.
                 continue;
             }
 
-            boid.align(otherBoid, VISION_DISTANCE);
+            // boid.align(otherBoid, VISION_DISTANCE);
             // boid.seperate(otherBoid, IDEAL_SEPERATION);
+            boid.
         }
 
         boid.update(TURN_SPEED);
