@@ -1,8 +1,9 @@
 // Some constants for configuring
-const NUMBER_OF_BOIDS = 100;
-const VISION_DISTANCE = 100;
+const NUMBER_OF_BOIDS = 200;
+const VISION_DISTANCE = 150;
 const IDEAL_SEPERATION = 20;
 const TURN_SPEED = 0.025;
+const MOVE_SPEED = 2.0;
 
 // A placeholder variable where we will store our canvas HTML element.
 let canvas;
@@ -22,6 +23,11 @@ let boids = [];
 let flockCenterX;
 // The Y component of the LAST FRAME average flock position
 let flockCenterY;
+
+// The X component of the "danger" to the flock
+let dangerX;
+// The Y component of the "danger" to the flock
+let dangerY;
 
 // This function will be called once to get everything ready.
 function setup() {
@@ -72,16 +78,38 @@ function setup() {
 
         // "push" the new boid into the array of boids
         boids.push(boid);
+
+        // Set a default "danger" position
+        dangerX = window.innerWidth / 2;
+        dangerY = window.innerHeight / 2;
     }
 
-    // This allows us to fire the loop function by
-    // pressing the "a" key. This allows for single
-    // step loops.
-    document.addEventListener('keydown', (evt) => {
-        if (evt.key == "a") {
-            loop();
-        }
-    })
+    // This links the document's keydown event to our onKeyDown function
+    document.addEventListener('keydown', onKeyDown);
+
+    // This links the document's mousemove event to our onMouseMove function
+    document.addEventListener('mousemove', onMouseMove);
+}
+
+// This function will run every time a keyboard
+// button is pressed.
+function onKeyDown(event){
+    // If "a" is pressed
+    if (event.key == "a") {
+        // Run the loop
+        loop();
+    }
+}
+
+// This function will run every time the mouse moves
+function onMouseMove(event){
+
+    // If left mouse button pressed
+    if(event.buttons === 1){
+        // Set the danger position to the mouse position
+        dangerX = event.clientX;
+        dangerY = event.clientY;
+    }
 }
 
 // This function will run over and over until the simulation
@@ -111,11 +139,12 @@ function loop() {
     for (const boid of boids) {
         // Code in here will run for EACH boid
 
-        boid.align(boids, VISION_DISTANCE,      0.50);
-        boid.flock(flockCenterX, flockCenterY,  0.80);
-        boid.seperate(boids, IDEAL_SEPERATION,  0.80);
+        boid.align(boids, VISION_DISTANCE,      0.40);
+        boid.flock(flockCenterX, flockCenterY,  0.70);
+        boid.seperate(boids, IDEAL_SEPERATION,  0.70);
+        boid.avoid(dangerX, dangerY, VISION_DISTANCE, 1.0);
 
-        boid.update(TURN_SPEED);
+        boid.update(TURN_SPEED, MOVE_SPEED);
 
         boid.draw(context);
 
@@ -124,10 +153,13 @@ function loop() {
         workingAverageFlockY = (workingAverageFlockY + boid.y) / 2;
     }
 
-
     // Draw the center of the flock
     context.fillStyle = "blue";
     context.fillRect(flockCenterX - 4, flockCenterY - 4, 8, 8);
+
+    // Draw the center of the danger
+    context.fillStyle = "green";
+    context.fillRect(dangerX - 4, dangerY - 4, 8, 8);
 
     // If we were to update the flock average position in
     //  a rolling manor (updating the average with each boid)

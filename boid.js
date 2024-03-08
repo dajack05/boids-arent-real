@@ -123,9 +123,27 @@ class Boid {
         this.targetAngle = lerp(this.targetAngle, angleToFlock, strength);
     }
 
+    avoid(dangerX, dangerY, maxDistance, strength){
+        const distanceToDanger = this.distanceTo(dangerX, dangerY);
+
+        // If it's too far to "see" move on.
+        if(distanceToDanger > maxDistance){
+            return;
+        }
+
+        // From where we are, where is the danger?
+        const angleToDanger = this.angleTo(dangerX, dangerY);
+
+        // What is the opposite of that?
+        const angleFromDanger = toSafeAngle(angleToDanger + Math.PI);
+
+        // Average our "ideal" angle, and the existing angle
+        this.targetAngle = lerp(this.targetAngle, angleFromDanger, strength);
+    }
+
     // A function whose ONLY job is to update the
     // state of THIS boid.
-    update(turnSpeedMultiplier) {
+    update(turnSpeedMultiplier, movementSpeed) {
         // How far off are we?
         let angleDiff = angleDifference(this.angle, this.targetAngle);
 
@@ -136,8 +154,8 @@ class Boid {
         this.targetAngle = this.angle;
 
         // Move according to angle
-        this.x += Math.sin(this.angle);
-        this.y -= Math.cos(this.angle);
+        this.x += Math.sin(this.angle) * movementSpeed;
+        this.y -= Math.cos(this.angle) * movementSpeed;
 
         // If we go 'out of bounds', warp us to the oposing side
         if (this.x < 0) { // If beyond left side
