@@ -1,8 +1,8 @@
 // Some constants for configuring
-const NUMBER_OF_BOIDS = 10;
+const NUMBER_OF_BOIDS = 100;
 const VISION_DISTANCE = 100;
-const IDEAL_SEPERATION = 25;
-const TURN_SPEED = 0.05;
+const IDEAL_SEPERATION = 20;
+const TURN_SPEED = 0.025;
 
 // A placeholder variable where we will store our canvas HTML element.
 let canvas;
@@ -111,9 +111,9 @@ function loop() {
     for (const boid of boids) {
         // Code in here will run for EACH boid
 
-        boid.align(boids, VISION_DISTANCE, 1.0);
-        // boid.flock(flockCenterX, flockCenterY, 1.0);
-        // boid.seperate(boids, IDEAL_SEPERATION, 1.0);
+        boid.align(boids, VISION_DISTANCE,      0.50);
+        boid.flock(flockCenterX, flockCenterY,  0.80);
+        boid.seperate(boids, IDEAL_SEPERATION,  0.80);
 
         boid.update(TURN_SPEED);
 
@@ -123,6 +123,11 @@ function loop() {
         workingAverageFlockX = (workingAverageFlockX + boid.x) / 2;
         workingAverageFlockY = (workingAverageFlockY + boid.y) / 2;
     }
+
+
+    // Draw the center of the flock
+    context.fillStyle = "blue";
+    context.fillRect(flockCenterX - 4, flockCenterY - 4, 8, 8);
 
     // If we were to update the flock average position in
     //  a rolling manor (updating the average with each boid)

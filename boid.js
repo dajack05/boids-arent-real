@@ -10,6 +10,12 @@ function toSafeAngle(input) {
     return a;
 }
 
+// Utility function to find the smallest angular
+// difference between two angles. (in radians)
+function angleDifference(from, to) {
+    return Math.atan2(Math.sin(to - from), Math.cos(to - from));
+}
+
 // Utility linear interpolation function
 function lerp(start, end, percent) {
     return start + percent * (end - start);
@@ -25,7 +31,7 @@ class Boid {
     // is created. This is handled by JS, so we don't need
     // to call this function.
     constructor() {
-        this.angle = Math.random() * Math.PI * 2;       // Random starting angle (in radians)
+        this.angle = toSafeAngle(Math.random() * Math.PI * 2);       // Random starting angle (in radians)
         this.targetAngle = this.angle;                  // Make sure they agree at the beginning lol
         this.x = Math.random() * window.innerWidth;     // Random starting position X
         this.y = Math.random() * window.innerHeight;    // Random starting position Y
@@ -34,7 +40,7 @@ class Boid {
     // This function returns the angle (in radians)
     // from our location to the specified X,Y position.
     angleTo(x, y) {
-        return Math.atan2(y - this.y, x - this.x) - (Math.PI / 2);
+        return Math.atan2(y - this.y, x - this.x) + (Math.PI / 2);
     }
 
     // This function returns the distance from our
@@ -48,11 +54,11 @@ class Boid {
     // proportinally to the distance between them.
     // maxDistance is how far the boid can "see".
     align(boids, maxDistance, strength) {
-        let averageAlignedAngle = null;
+        let averageAlignedAngle = this.targetAngle;
 
         for (const boid of boids) {
             // Ignore the boid if it is us.
-            if(boid == this){
+            if (boid == this) {
                 continue;
             }
 
@@ -60,54 +66,58 @@ class Boid {
 
             // If we're too far away, just ignore it
             if (distance > maxDistance) {
-                return;
+                continue;
             }
 
             // 0.0 - 1.0. How close is it?
             const influence = 1.0 - distance / maxDistance;
 
-            // What is the angle given it's distance?
-            const distanceFactoredAngle = boid.angle * influence;
+            // How far (and in what direction) are we from the "perfect" angle?
+            const angleDelta = angleDifference(averageAlignedAngle, boid.angle);
 
-            // If averageAlignedAngle hasn't been set yet
-            if(averageAlignedAngle == null){
-                // Set it
-                averageAlignedAngle = distanceFactoredAngle;
-            }else{
-                // Otherwise, average it
-                averageAlignedAngle = (averageAlignedAngle + distanceFactoredAngle) / 2;
-            }
+            // What is the angle given it's distance?
+            const distanceFactoredAngle = angleDelta * influence;
+
+            // add our angle to the average
+            averageAlignedAngle += distanceFactoredAngle;
         }
 
-        console.log(averageAlignedAngle);
         // Average our "ideal" angle, and the existing angle
-        this.targetAngle = averageAlignedAngle;//lerp(this.targetAngle, averageAlignedAngle, strength);
+        this.targetAngle = lerp(this.targetAngle, averageAlignedAngle, strength);
     }
 
     // This function tries to keep a set distance
     // between THIS boid and the incoming parameter
     // boid.
-    seperate(boid, goalDistance, strength) {
-        const distance = this.distanceTo(boid.x, boid.y);
+    seperate(boids, goalDistance, strength) {
+        let averageSeperationAngle = this.targetAngle;
 
-        const influence = distance / goalDistance;
+        for (const boid of boids) {
+            const distance = this.distanceTo(boid.x, boid.y);
 
-        // Influence will be over 1.0 if we're not
-        // too close. So ignore those cases.
-        if (influence > 1.0) {
-            return;
+            // Influence will be over 1.0 if we're not
+            // too close. So ignore those cases.
+            if (distance > goalDistance) {
+                continue;
+            }
+
+            const influence = distance / goalDistance;
+            const angleToBoid = this.angleTo(boid.x, boid.y);
+            const angleFromBoid = toSafeAngle(angleToBoid - Math.PI);
+            const angleDiff = angleDifference(averageSeperationAngle, angleFromBoid);
+            const influenceAdjustedAngleDiff = angleDiff * influence;
+
+            averageSeperationAngle += influenceAdjustedAngleDiff;
         }
 
-        const angle = this.angleTo(boid.x, boid.y);
-
         // Average our "ideal" angle, and the existing angle
-        this.targetAngle = lerp(this.targetAngle, angle, strength);
+        this.targetAngle = lerp(this.targetAngle, averageSeperationAngle, strength);
     }
 
     // This function tries to turn into the center of the "flock"
     flock(averageCenterX, averageCenterY, strength) {
         // From where we are, where is the flock?
-        const angleToFlock = toSafeAngle(this.angleTo(averageCenterX, averageCenterY) + Math.PI);
+        const angleToFlock = this.angleTo(averageCenterX, averageCenterY);
 
         // Average our "ideal" angle, and the existing angle
         this.targetAngle = lerp(this.targetAngle, angleToFlock, strength);
@@ -117,13 +127,13 @@ class Boid {
     // state of THIS boid.
     update(turnSpeedMultiplier) {
         // How far off are we?
-        let angleDifference = this.targetAngle - this.angle;
-
-        // Limit the angle
-        angleDifference = toSafeAngle(angleDifference);
+        let angleDiff = angleDifference(this.angle, this.targetAngle);
 
         // Slowly rotate toward the target angle
-        this.angle += angleDifference * turnSpeedMultiplier;
+        this.angle += angleDiff * turnSpeedMultiplier;
+        this.angle = toSafeAngle(this.angle);
+
+        this.targetAngle = this.angle;
 
         // Move according to angle
         this.x += Math.sin(this.angle);
