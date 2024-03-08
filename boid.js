@@ -176,7 +176,7 @@ class Boid {
     // given it's current state (position and angle)
     draw(context) {
         // Set color
-        context.fillStyle = "red";
+        context.fillStyle = "#CCCCCC";
 
         // Draw/Fill the polygon
         context.save();             // Take note of the current rendering state (where the viewport is)
@@ -186,10 +186,10 @@ class Boid {
 
         context.beginPath();        // Tell the context that we are starting a "path" (polygon)
 
-        context.moveTo(0, -10);       // Move an imaginary pen to the location specified
-        context.lineTo(10, 10);     // Draw a line from wherever we were (as set by moveTo) to the location specified
-        context.lineTo(-10, 10);    // Continue the line to the specified location
-        context.lineTo(0, -10);       // Continue the line to the specified location
+        context.moveTo(0, -5);       // Move an imaginary pen to the location specified
+        context.lineTo(5, 5);     // Draw a line from wherever we were (as set by moveTo) to the location specified
+        context.lineTo(-5, 5);    // Continue the line to the specified location
+        context.lineTo(0, -5);       // Continue the line to the specified location
 
         context.fill();             // Tell the context that we're done with our "path" and that we want to "fill" the shape
 
