@@ -30,11 +30,13 @@ let flockCenterX;
 // The Y component of the LAST FRAME average flock position
 let flockCenterY;
 
+// The X component of the last known mouse position
+let mouseX;
+// The Y component of the last known mouse position
+let mouseY;
+
 // This function will be called once to get everything ready.
 function setup() {
-    // For debug purposes
-    console.log("Running setup()");
-
     // Create a new <canvas> element and store it in the canvas variable
     canvas = document.createElement("canvas");
 
@@ -81,8 +83,14 @@ function setup() {
         boids.push(boid);
     }
 
+    mouseX = 0;
+    mouseY = 0;
+
     // This links the document's keydown event to our onKeyDown function
     document.addEventListener('keydown', onKeyDown);
+
+    // This links the document's mousemove event to our onMouseMove function
+    document.addEventListener('mousemove', onMouseMove);
 }
 
 // This function will run every time a keyboard
@@ -93,6 +101,12 @@ function onKeyDown(event){
         // Run the loop
         loop();
     }
+}
+
+// This function will run every time the mouse moves
+function onMouseMove(event){
+    mouseX = event.clientX;
+    mouseY = event.clientY;
 }
 
 // This function will run over and over until the simulation
@@ -137,7 +151,8 @@ function loop() {
     }
 
     // Update the hawk
-    hawk.hunt(flockCenterX, flockCenterY, 1.0);
+    // hawk.hunt(flockCenterX, flockCenterY, 1.0);
+    hawk.hunt(mouseX, mouseY, 1.0);
     hawk.update(HAWK_TURN_SPEED, HAWK_MOVE_SPEED);
 
     // draw the hawk
