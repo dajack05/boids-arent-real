@@ -134,16 +134,6 @@ function loop() {
     //  boid's location to not bias the result.
     let workingAverageFlockY = boids[0].y;
 
-    // Start measuring loop time
-    const timer = new Timer();
-    const totalTimer = new Timer();
-    totalTimer.start();
-
-    let alignTotal = 0;
-    let flockTotal = 0;
-    let seperateTotal = 0;
-    let avoidTotal = 0;
-
     // Draw our boids
     for (const boid of boids) {
         // Code in here will run for EACH boid
@@ -166,15 +156,6 @@ function loop() {
         workingAverageFlockX = (workingAverageFlockX + boid.x) / 2;
         workingAverageFlockY = (workingAverageFlockY + boid.y) / 2;
     }
-
-    const totalTime = totalTimer.stop();
-    console.log(totalTime);
-    // console.log(
-    //     (Math.round((alignTotal / totalTime) * 100)) + "%",
-    //     (Math.round((flockTotal / totalTime) * 100)) + "%",
-    //     (Math.round((seperateTotal / totalTime) * 100)) + "%",
-    //     (Math.round((avoidTotal / totalTime) * 100)) + "%",
-    // );
 
     // Update the hawk
     // hawk.hunt(flockCenterX, flockCenterY, 1.0);
