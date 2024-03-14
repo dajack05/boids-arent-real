@@ -1,5 +1,5 @@
 // Some constants for configuring
-const NUMBER_OF_BOIDS = 400;
+const NUMBER_OF_BOIDS = 1000;
 const VISION_DISTANCE = 150;
 const IDEAL_SEPERATION = 15;
 const TURN_SPEED = 0.05;
@@ -95,7 +95,7 @@ function setup() {
 
 // This function will run every time a keyboard
 // button is pressed.
-function onKeyDown(event){
+function onKeyDown(event) {
     // If "a" is pressed
     if (event.key == "a") {
         // Run the loop
@@ -104,10 +104,12 @@ function onKeyDown(event){
 }
 
 // This function will run every time the mouse moves
-function onMouseMove(event){
+function onMouseMove(event) {
     mouseX = event.clientX;
     mouseY = event.clientY;
 }
+
+let average_time = null;
 
 // This function will run over and over until the simulation
 // is stopped.
@@ -132,14 +134,29 @@ function loop() {
     //  boid's location to not bias the result.
     let workingAverageFlockY = boids[0].y;
 
+    // Start measuring loop time
+    const timer = new Timer();
+    const totalTimer = new Timer();
+    totalTimer.start();
+
+    let alignTotal = 0;
+    let flockTotal = 0;
+    let seperateTotal = 0;
+    let avoidTotal = 0;
+
     // Draw our boids
     for (const boid of boids) {
         // Code in here will run for EACH boid
 
-        boid.align(boids, VISION_DISTANCE,              0.40);
-        boid.flock(flockCenterX, flockCenterY,          0.70);
-        boid.seperate(boids, IDEAL_SEPERATION,          0.70);
-        boid.avoid(hawk.x, hawk.y, VISION_DISTANCE,     0.80);
+        timer.start();
+        boid.align(boids, VISION_DISTANCE, 0.40);
+        alignTotal += timer.lap();
+        boid.flock(flockCenterX, flockCenterY, 0.70);
+        flockTotal += timer.lap();
+        boid.seperate(boids, IDEAL_SEPERATION, 0.80);
+        seperateTotal += timer.lap();
+        boid.avoid(hawk.x, hawk.y, VISION_DISTANCE, 0.90);
+        avoidTotal += timer.lap();
 
         boid.update(TURN_SPEED, MOVE_SPEED);
 
@@ -149,6 +166,15 @@ function loop() {
         workingAverageFlockX = (workingAverageFlockX + boid.x) / 2;
         workingAverageFlockY = (workingAverageFlockY + boid.y) / 2;
     }
+
+    const totalTime = totalTimer.stop();
+    console.log(totalTime);
+    // console.log(
+    //     (Math.round((alignTotal / totalTime) * 100)) + "%",
+    //     (Math.round((flockTotal / totalTime) * 100)) + "%",
+    //     (Math.round((seperateTotal / totalTime) * 100)) + "%",
+    //     (Math.round((avoidTotal / totalTime) * 100)) + "%",
+    // );
 
     // Update the hawk
     // hawk.hunt(flockCenterX, flockCenterY, 1.0);

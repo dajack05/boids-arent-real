@@ -49,6 +49,14 @@ class Boid {
         return Math.hypot(this.x - x, this.y - y);
     }
 
+    // This function returns the distance squared.
+    // it is faster than the standard 'distanceTo'
+    // as it doesn't need the 'perfect' distance
+    // to reject boids far away
+    fastDistanceTo(x, y) {
+        return ((this.x - x) * (this.x - x) + (this.y - y) * (this.y - y)) / 2.0;
+    }
+
     // This function aligns THIS boid with the
     // boids passed in via the "boids" parameter
     // proportinally to the distance between them.
@@ -62,15 +70,19 @@ class Boid {
                 continue;
             }
 
-            const distance = this.distanceTo(boid.x, boid.y);
-
+            // For boid rejection, we don't NEED super accurate
+            // results. So we use the faster version for that.
+            const fastDistance = this.fastDistanceTo(boid.x, boid.y);
+            
             // If we're too far away, just ignore it
-            if (distance > maxDistance) {
+            if (fastDistance > maxDistance) {
                 continue;
             }
 
+            const realDistance = this.distanceTo(boid.x, boid.y);
+
             // 0.0 - 1.0. How close is it?
-            const influence = 1.0 - distance / maxDistance;
+            const influence = 1.0 - realDistance / maxDistance;
 
             // How far (and in what direction) are we from the "perfect" angle?
             const angleDelta = angleDifference(averageAlignedAngle, boid.angle);
@@ -93,11 +105,20 @@ class Boid {
         let averageSeperationAngle = this.targetAngle;
 
         for (const boid of boids) {
+
+            // For boid rejection, we don't NEED super accurate
+            // results. So we use the faster version for that.
+            const fastDistance = this.fastDistanceTo(boid.x, boid.y);
+
+            // If we're WAY too far away, just ignore it
+            if(fastDistance > goalDistance * 2){
+                continue;
+            }
+
             const distance = this.distanceTo(boid.x, boid.y);
 
-            // Influence will be over 1.0 if we're not
-            // too close. So ignore those cases.
-            if (distance > goalDistance) {
+            // If we're too far away, just ignore it
+            if(distance > goalDistance){
                 continue;
             }
 
@@ -123,11 +144,20 @@ class Boid {
         this.targetAngle = lerp(this.targetAngle, angleToFlock, strength);
     }
 
-    avoid(dangerX, dangerY, maxDistance, strength){
+    avoid(dangerX, dangerY, maxDistance, strength) {
+
+        // Get the rough distance to the danger
+        const fastDistance = this.fastDistanceTo(dangerX, dangerY);
+
+        // If we're for sure away from it, just ignore it.
+        if(fastDistance > maxDistance * 5){
+            return;
+        }
+
         const distanceToDanger = this.distanceTo(dangerX, dangerY);
 
         // If it's too far to "see" move on.
-        if(distanceToDanger > maxDistance){
+        if (distanceToDanger > maxDistance) {
             return;
         }
 
